@@ -5,6 +5,14 @@ const passport = require('passport');
 const cookieParser = require('cookie-parser');
 const RedisStore = require('connect-redis')(session);
 const neo4j = require('../database/neo4j');
+const aws = require('aws-sdk');
+const queueUrl = require('../config/configQueueUrl.js');
+
+aws.config.loadFromPath(`${__dirname}/../config/config.json`);
+
+const receipt = '';
+
+const sqs = new aws.SQS();
 
 const router = express.Router();
 router.use(cookieParser());
@@ -15,7 +23,12 @@ router.use(passport.session());
 
 router.use(
   session({
-    store: new RedisStore({ host: 'localhost', port: 6379, client: redis.client, ttl: 260 }),
+    store: new RedisStore({
+      host: 'localhost',
+      port: 6379,
+      client: redis.client,
+      ttl: 260,
+    }),
     secret: 'backazon',
     resave: false,
     saveUninitialized: false,
@@ -58,7 +71,62 @@ router.get('/api/neoCreateRelationships', (req, res) => {
   return res.status(201);
 });
 
-router.get('doAll', (req, res) => {
+// AMAZON SQS related stuff
+router.get('/create', (req, res) => {
+  const params = {
+    QueueName: 'MyFirstQueue',
+  };
+
+  sqs.createQueue(params, (err, data) => {
+    if (err) {
+      res.send(err);
+    } else {
+      res.send(data);
+    }
+  });
 });
+router.get('/list', (req, res) => {
+  sqs.listQueues((err, data) => {
+    if (err) {
+      res.send(err);
+    } else {
+      res.send(data);
+    }
+  });
+});
+
+router.get('/send', (req, res) => {
+  const params = {
+    MessageBody: JSON.stringify({"hello": 'world'}),
+    QueueUrl: queueUrl,
+    DelaySeconds: 0,
+  };
+
+  sqs.sendMessage(params, (err, data) => {
+    if (err) {
+      res.send(err);
+    } else {
+      res.send(data);
+    }
+  });
+});
+
+router.get('/receive', (req, res) => {
+  const params = {
+    QueueUrl: queueUrl,
+    VisibilityTimeout: 600, // 10 min wait time for anyone else to process.
+  };
+
+  sqs.receiveMessage(params, (err, data) => {
+    if (err) {
+      res.send(err);
+    } else {
+      res.send(data);
+      console.log(data.Messages[0].Body);
+    }
+  });
+});
+
+router.get('doAll', (req, res) => {});
 
 module.exports = router;

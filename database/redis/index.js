@@ -1,6 +1,6 @@
 const redis = require('redis');
-const inventory = require('./../../data/inventory');
-const users = require('./../../data/users2');
+//const inventory = require('./../../data/inventory');
+//const users = require('./../../data/users2');
 
 const client = redis.createClient();
 

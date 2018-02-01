@@ -1,7 +1,7 @@
 // const neo4j = require('neo4j');
 const neo4j = require('neo4j-driver').v1;
-const inventory = require('./../../data/inventory');
-const users = require('./../../data/users2');
+// const inventory = require('./../../data/inventory');
+// const users = require('./../../data/users2');
 const driver = neo4j.driver(
   'bolt://localhost',
   neo4j.auth.basic('neo4j', '123'),
@@ -10,8 +10,8 @@ const session = driver.session();
 
 const names = [];
 
-//session.run(`CREATE (user:USER {id: 12490182040, name: 'fasdghjasiojf'})`);
-let count2j = 0;
+// session.run(`CREATE (user:USER {id: 12490182040, name: 'fasdghjasiojf'})`);
+const count2j = 0;
 
 /*
 for (const key in users) {
@@ -116,7 +116,7 @@ const createRelationships = () => {
 */
 
 module.exports = {
-  loadItems,
-  loadUsers,
-  createRelationships,
+  //  loadItems,
+  // loadUsers,
+  // createRelationships,
 };
