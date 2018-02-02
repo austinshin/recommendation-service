@@ -2,6 +2,7 @@
 const neo4j = require('neo4j-driver').v1;
 // const inventory = require('./../../data/inventory');
 // const users = require('./../../data/users2');
+const util = require('./helpers.js');
 const driver = neo4j.driver(
   'bolt://localhost',
   neo4j.auth.basic('neo4j', '123'),
@@ -11,7 +12,65 @@ const session = driver.session();
 const names = [];
 
 // session.run(`CREATE (user:USER {id: 12490182040, name: 'fasdghjasiojf'})`);
-const count2j = 0;
+
+// create a user of userid
+const createUser = (user_id, name) => {
+  session
+    .run(`CREATE (user: USER {user_id: {user_id}, name: {name}})`, {
+      user_id,
+      name,
+    })
+    .then(() => session.close())
+    .catch(err => console.error(err));
+};
+
+// performs a query to grab user based on id
+const getUser = user_id => {
+ return session
+    .run(`MATCH (user: USER {user_id: {user_id}}) RETURN user`, {
+      user_id,
+    })
+    .then(results => {
+      session.close();
+      return results.records[0];
+    })
+    .catch(err => console.error(err));
+};
+
+const getProduct = product_id => {
+  return session.run(`MATCH (product: PRODUCT {product_id: {product_id}}) RETURN product`, {
+    product_id,
+  })
+  .then(results => {
+    session.close();
+    return results.records[0];
+  })
+  .catch(err => console.error(err));
+};
+
+const getCollaborativeRecommendedList = user_id => {
+  return session.run(`MATCH (a:USER {user_id: {user_id}})-[:RELATION]->(similarProduct)<-[:RELATION]-(product),(product)-[:RELATION]->(recommendedProduct) RETURN recommendedProduct.name AS Recommended, count(*) AS Strength ORDER BY Strength DESC LIMIT 3`, {
+  user_id,
+  })
+  .then(results => {
+    const collabRecList = util.parseRecordsToArray(results.records);
+    session.close();
+    return collabRecList;
+  })
+  .catch(err => console.error(err));
+};
+
+const getContentRecommendedList = user_id => {
+  return session.run(`MATCH (a:USER {user_id: {user_id}})-[:RELATION]->(similarProduct)<-[:RELATION]-(product),(product)-[:RELATION]->(recommendedProduct) RETURN recommendedProduct.name AS Recommended, count(*) AS Strength ORDER BY Strength DESC LIMIT 2`, {
+  user_id,
+  })
+  .then(results => {
+    const contentRecList = util.parseRecordsToArray(results.records);
+    session.close();
+    return contentRecList;
+  })
+  .catch(err => console.error(err));
+};
 
 /*
 for (const key in users) {
@@ -78,26 +137,6 @@ const loadItems = () => {
   }
 };
 
-const generateFakeRelationships = (
-  numOfRelationships,
-  numOfUsers,
-  numOfProducts,
-) => {
-  const events = ['view', 'click', 'purchased', 'reviewed'];
-  const completeRelationshipList = [];
-  for (let i = 0; i < numOfRelationships; i++) {
-    const relationship = {
-      userId: Math.floor(Math.random() * numOfUsers + 1),
-      productId: Math.floor(Math.random() * numOfProducts + 1),
-      event: events[Math.floor(Math.random() * events.length)],
-    };
-    completeRelationshipList.push(relationship);
-  }
-  return completeRelationshipList;
-};
-
-// console.log(generateFakeRelationships(5000, 1000, 5000));
-
 const createRelationships = () => {
   const relationshipList = generateFakeRelationships(10000, 1000, 5000);
   for (let i = 0; i < relationshipList.length; i++) {
@@ -116,6 +155,10 @@ const createRelationships = () => {
 */
 
 module.exports = {
+  getUser,
+  getProduct,
+  getCollaborativeRecommendedList,
+  getContentRecommendedList,
   //  loadItems,
   // loadUsers,
   // createRelationships,

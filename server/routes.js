@@ -35,6 +35,84 @@ router.use(
   }),
 );
 
+router.get('/', async (req, res) => {
+  res.sendStatus(201);
+});
+
+// getting a user in the db
+router.get('/api/getUser', async (req, res) => {
+  try {
+    //make sure it is in string format
+    let user = await neo4j.getUser('1');
+    return res.status(200).json(user);
+  } catch (err) {
+    return res.status(500).json(err.stack);
+  }
+});
+
+// getting a product in the db
+router.get('/api/getProduct', async (req, res) => {
+  try {
+    //make sure it is in string format
+    let product = await neo4j.getProduct('15');
+    return res.status(200).json(product);
+  } catch (err) {
+    return res.status(500).json(err.stack);
+  }
+});
+
+// answers client's get request
+router.get('/api/getCollaborativeRecommendedList', async (req, res) => {
+  // query redis
+  //   yes results.
+  //     return
+  //   no results
+  //     query neo4j
+  //       yes results.
+  //       return
+  //    no results
+  //       return 'no recommended list for said user'
+  try {
+    let collabList = await neo4j.getCollaborativeRecommendedList('6');
+    return res.status(200).json(collabList);
+  } catch (err) {
+    return res.status(500).json(err.stack);
+  }
+});
+
+// answers client's get request
+router.get('/api/getContentRecommendedList', async (req, res) => {
+  // query redis
+  //   yes results.
+  //     return
+  //   no results
+  //     query neo4j
+  //       yes results.
+  //       return
+  //    no results
+  //       return 'no recommended list for said user'
+  try {
+    let contentList = await neo4j.getContentRecommendedList('5');
+    return res.status(200).json(contentList);
+  } catch (err) {
+    return res.status(500).json(err.stack);
+  }
+});
+
+//setInterval or chronjob this function
+const someFunctionEveryOneDay = () => {
+  // fetch('/getTopTrendingItems')
+  // fetch('/getUserAnalytics')
+  // on success
+  //   query neo4j relevant info.
+  // if there is a new user...
+  //   create a new user
+  // if there is a new product...
+  //   create a new product
+  // if there are new relationships
+  //   create those relationships.
+}
+
 // inserting users into to redis db
 router.get('/api/redisUpdateUsers', (req, res) => {
   redis.updateUsers();
