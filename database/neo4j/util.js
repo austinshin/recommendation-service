@@ -4,5 +4,4 @@ const parseRecordsToArray = (records) => {
 records.forEach(item => {
   recList.push(item._fields[0]);
 });
-console.log(recList);
 };
