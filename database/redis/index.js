@@ -1,6 +1,4 @@
 const redis = require('redis');
-//const inventory = require('./../../data/inventory');
-//const users = require('./../../data/users2');
 
 const client = redis.createClient();
 
@@ -8,9 +6,6 @@ client.on('error', err => {
   console.log('Something went wrong ', err);
 });
 
-// use hmset
-//
-//  users: { asdklfjaslkfjlksaf: lkajsdflkajsf }
 const updateUsers = () => {
   console.log('updating users...');
   for (const key in users) {
@@ -29,6 +24,22 @@ const updateInventory = () => {
   }
 };
 
+
+
+const getCollaborativeRecommendedList = (user_id) => {
+  client.lrange('collablist', user_id, user_id, (err, reply) => {
+    if (err) {
+      console.error(err);
+    }
+    console.log(reply);
+  });
+
+};
+
+const getContentRecommendedList = (user_id) => {
+
+};
+
 /*
 client.hgetall('hashkey', function(err, result) {
   console.log(JSON.stringify(result)); // {"key":"value","second key":"second value"}
@@ -39,4 +50,6 @@ module.exports = {
   client,
   updateUsers,
   updateInventory,
+  getCollaborativeRecommendedList,
+  getContentRecommendedList,
 };
