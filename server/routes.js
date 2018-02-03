@@ -42,8 +42,8 @@ router.get('/', async (req, res) => {
 // getting a user in the db
 router.get('/api/getUser', async (req, res) => {
   try {
-    //make sure it is in string format
-    let user = await neo4j.getUser('1');
+    // make sure it is in string format
+    const user = await neo4j.getUser('1');
     return res.status(200).json(user);
   } catch (err) {
     return res.status(500).json(err.stack);
@@ -53,8 +53,8 @@ router.get('/api/getUser', async (req, res) => {
 // getting a product in the db
 router.get('/api/getProduct', async (req, res) => {
   try {
-    //make sure it is in string format
-    let product = await neo4j.getProduct('15');
+    // make sure it is in string format
+    const product = await neo4j.getProduct('15');
     return res.status(200).json(product);
   } catch (err) {
     return res.status(500).json(err.stack);
@@ -63,17 +63,23 @@ router.get('/api/getProduct', async (req, res) => {
 
 // answers client's get request
 router.get('/api/getCollaborativeRecommendedList', async (req, res) => {
-  // query redis
-  //   yes results.
-  //     return
-  //   no results
-  //     query neo4j
-  //       yes results.
-  //       return
-  //    no results
-  //       return 'no recommended list for said user'
+  // let user_id = req.body.user_id; TODO uncomment this
+  let user_id = '6';
   try {
-    let collabList = await neo4j.getCollaborativeRecommendedList('6');
+    let collabList = await redis.getCollaborativeRecommendedList(user_id);
+    if (collabList.length === 0) {
+      const strNum = `${Math.floor(Math.random() * 1000000)}`;
+      collabList = await neo4j.getCollaborativeRecommendedList(strNum);
+      if (collabList.length === 0) {
+        collabList = [
+          'product1',
+          'product2',
+          'product3',
+          'product4',
+          'product5',
+        ];
+      }
+    }
     return res.status(200).json(collabList);
   } catch (err) {
     return res.status(500).json(err.stack);
@@ -82,24 +88,30 @@ router.get('/api/getCollaborativeRecommendedList', async (req, res) => {
 
 // answers client's get request
 router.get('/api/getContentRecommendedList', async (req, res) => {
-  // query redis
-  //   yes results.
-  //     return
-  //   no results
-  //     query neo4j
-  //       yes results.
-  //       return
-  //    no results
-  //       return 'no recommended list for said user'
+  // let user_id = req.body.user_id; TODO uncomment this
+  let user_id = '5';
   try {
-    let contentList = await neo4j.getContentRecommendedList('5');
+    let contentList = await redis.getContentRecommendedList(user_id);
+    if (contentList.length === 0) {
+      const strNum = `${Math.floor(Math.random() * 10000)}`;
+      contentList = await neo4j.getContentRecommendedList(strNum);
+      if (contentList.length === 0) {
+        contentList = [
+          'product1',
+          'product2',
+          'product3',
+          'product4',
+          'product5',
+        ];
+      }
+    }
     return res.status(200).json(contentList);
   } catch (err) {
     return res.status(500).json(err.stack);
   }
 });
 
-//setInterval or chronjob this function
+// setInterval or chronjob this function
 const someFunctionEveryOneDay = () => {
   // fetch('/getTopTrendingItems')
   // fetch('/getUserAnalytics')
@@ -111,7 +123,8 @@ const someFunctionEveryOneDay = () => {
   //   create a new product
   // if there are new relationships
   //   create those relationships.
-}
+  // store new relationships insdei redis..
+};
 
 // inserting users into to redis db
 router.get('/api/redisUpdateUsers', (req, res) => {
@@ -175,7 +188,7 @@ router.get('/list', (req, res) => {
 
 router.get('/send', (req, res) => {
   const params = {
-    MessageBody: JSON.stringify({"hello": 'world'}),
+    MessageBody: JSON.stringify({ hello: 'world' }),
     QueueUrl: queueUrl,
     DelaySeconds: 0,
   };
