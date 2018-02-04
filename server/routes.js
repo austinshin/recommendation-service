@@ -7,6 +7,7 @@ const RedisStore = require('connect-redis')(session);
 const neo4j = require('../database/neo4j');
 const aws = require('aws-sdk');
 const queueUrl = require('../config/configQueueUrl.js');
+const PQueue = require('p-queue');
 
 aws.config.loadFromPath(`${__dirname}/../config/config.json`);
 
@@ -35,12 +36,14 @@ router.use(
   }),
 );
 
-router.get('/', async (req, res) => {
-  res.sendStatus(201);
+// making sure server works.
+router.get('/benchmarkping', async (req, res) => {
+  res.status(200).json('pong');
 });
 
 // getting a user in the db
 router.get('/api/getUser', async (req, res) => {
+  let user_id = req.body.user_id + '';
   try {
     // make sure it is in string format
     const user = await neo4j.getUser('1');
@@ -52,24 +55,30 @@ router.get('/api/getUser', async (req, res) => {
 
 // getting a product in the db
 router.get('/api/getProduct', async (req, res) => {
+  let product_id = req.body.product_id + '';
   try {
-    // make sure it is in string format
-    const product = await neo4j.getProduct('15');
+    const product = await neo4j.getProduct(product_id);
     return res.status(200).json(product);
   } catch (err) {
     return res.status(500).json(err.stack);
   }
 });
 
-// answers client's get request
+// TODO createUser
+// TODO createProduct
+// TODO createRelationship
+router.get('/api/neoCreateRelationships', (req, res) => {
+  neo4j.createRelationships();
+  return res.status(201);
+});
+
+
 router.get('/api/getCollaborativeRecommendedList', async (req, res) => {
-  // let user_id = req.body.user_id; TODO uncomment this
-  let user_id = '6';
+  var user_id = req.query.user_id || (req.body.user_id + '');
   try {
     let collabList = await redis.getCollaborativeRecommendedList(user_id);
     if (collabList.length === 0) {
-      const strNum = `${Math.floor(Math.random() * 1000000)}`;
-      collabList = await neo4j.getCollaborativeRecommendedList(strNum);
+      collabList = await neo4j.getCollaborativeRecommendedList(user_id);
       if (collabList.length === 0) {
         collabList = [
           'product1',
@@ -79,6 +88,8 @@ router.get('/api/getCollaborativeRecommendedList', async (req, res) => {
           'product5',
         ];
       }
+    } else {
+      collabList = JSON.parse(collabList[0]);
     }
     return res.status(200).json(collabList);
   } catch (err) {
@@ -88,13 +99,11 @@ router.get('/api/getCollaborativeRecommendedList', async (req, res) => {
 
 // answers client's get request
 router.get('/api/getContentRecommendedList', async (req, res) => {
-  // let user_id = req.body.user_id; TODO uncomment this
-  let user_id = '5';
+  var user_id = req.query.user_id || (req.body.user_id + '');
   try {
     let contentList = await redis.getContentRecommendedList(user_id);
     if (contentList.length === 0) {
-      const strNum = `${Math.floor(Math.random() * 10000)}`;
-      contentList = await neo4j.getContentRecommendedList(strNum);
+      contentList = await neo4j.getContentRecommendedList(user_id);
       if (contentList.length === 0) {
         contentList = [
           'product1',
@@ -104,10 +113,22 @@ router.get('/api/getContentRecommendedList', async (req, res) => {
           'product5',
         ];
       }
+    } else {
+      contentList = JSON.parse(contentList[0]);
     }
     return res.status(200).json(contentList);
   } catch (err) {
     return res.status(500).json(err.stack);
+  }
+});
+
+router.get('/123', async (req, res) => {
+  try {
+    let contentList = await redis.getCollaborativeRecommendedList(2);
+    contentList = JSON.parse(contentList[0]);
+    res.status(200).json(contentList);
+  } catch (err) {
+    console.error(err);
   }
 });
 
@@ -126,41 +147,58 @@ const someFunctionEveryOneDay = () => {
   // store new relationships insdei redis..
 };
 
-// inserting users into to redis db
-router.get('/api/redisUpdateUsers', (req, res) => {
-  redis.updateUsers();
-  return res.status(201);
-});
-
-// inserting inventory items into redis db
-router.get('/api/redisUpdateInventory', (req, res) => {
+router.get('/api/redisUpdateCollaborativeRecommendedList', async (req, res) => {
   try {
-    // if (!req.session.passport) {
-    //   console.log('here');
-    //   return res.sendStatus(401);
-    // }
-    // query to redis by req.session.userId
-    redis.updateInventory();
+    const promises = [];
+    for (let i = 0; i < 2000; i++) {
+      i += '';
+      let collabList = await neo4j.getCollaborativeRecommendedList(i);
+      if (collabList.length === 0) {
+        collabList = ["top recommended items TODO"]; // TODO
+      }
+      promises.push(collabList);
+    }
+
+    Promise.all(promises)
+      .then(results => {
+        results.forEach((recommendedList) => {
+          redis.addToCollaborativeList(recommendedList);
+        });
+      })
+      .then(() => console.log('collabList cache updated!'))
+      .catch(e => console.error(e));
     return res.sendStatus(201);
   } catch (err) {
     return res.status(500).json(err.stack);
   }
 });
 
-router.get('/api/neoLoadUsers', (req, res) => {
-  neo4j.loadUsers();
-  return res.status(201);
+router.get('/api/redisUpdateContentRecommendedList', async (req, res) => {
+  try {
+    const promises = [];
+    for (let i = 0; i < 2000; i++) {
+      i += '';
+      let contentList = await neo4j.getContentRecommendedList(i);
+      if (contentList.length === 0) {
+        contentList = ["top recommended items TODO"]; // TODO
+      }
+      promises.push(contentList);
+    }
+
+    Promise.all(promises)
+      .then(results => {
+        results.forEach((recommendedList) => {
+          redis.addToContentList(recommendedList);
+        });
+      })
+      .then(() => console.log('contentList cache updated!'))
+      .catch(e => console.error(e));
+    return res.sendStatus(201);
+  } catch (err) {
+    return res.status(500).json(err.stack);
+  }
 });
 
-router.get('/api/neoLoadItems', (req, res) => {
-  neo4j.loadItems();
-  return res.status(201);
-});
-
-router.get('/api/neoCreateRelationships', (req, res) => {
-  neo4j.createRelationships();
-  return res.status(201);
-});
 
 // AMAZON SQS related stuff
 router.get('/create', (req, res) => {

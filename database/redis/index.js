@@ -1,44 +1,27 @@
 const redis = require('redis');
+const { promisify } = require('util');
 
 const client = redis.createClient();
+
+const lrangeAsync = promisify(client.lrange).bind(client);
+const getAsync = promisify(client.get).bind(client);
+const rpushAsync = promisify(client.rpush).bind(client);
 
 client.on('error', err => {
   console.log('Something went wrong ', err);
 });
 
-const updateUsers = () => {
-  console.log('updating users...');
-  for (const key in users) {
-    for (const k in users[key]) {
-      client.hset('hashkey', k, JSON.stringify(users[key][k]));
-    }
-  }
-};
+const addToContentList = recommendedList =>
+  rpushAsync('contentlist', JSON.stringify(recommendedList));
 
-const updateInventory = () => {
-  console.log('updating inventory...');
-  for (const key in inventory) {
-    for (const k in inventory[key]) {
-      client.hset('hashkey', k, JSON.stringify(inventory[key][k]));
-    }
-  }
-};
+const addToCollaborativeList = recommendedList =>
+  rpushAsync('collablist', JSON.stringify(recommendedList));
 
+const getCollaborativeRecommendedList = user_id =>
+  lrangeAsync('collablist', user_id, user_id).then(res => res);
 
-
-const getCollaborativeRecommendedList = (user_id) => {
-  client.lrange('collablist', user_id, user_id, (err, reply) => {
-    if (err) {
-      console.error(err);
-    }
-    console.log(reply);
-  });
-
-};
-
-const getContentRecommendedList = (user_id) => {
-
-};
+const getContentRecommendedList = user_id =>
+  lrangeAsync('contentlist', user_id, user_id).then(res => res);
 
 /*
 client.hgetall('hashkey', function(err, result) {
@@ -48,8 +31,8 @@ client.hgetall('hashkey', function(err, result) {
 
 module.exports = {
   client,
-  updateUsers,
-  updateInventory,
+  addToContentList,
+  addToCollaborativeList,
   getCollaborativeRecommendedList,
   getContentRecommendedList,
 };

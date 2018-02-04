@@ -111,9 +111,9 @@ const createRelationship = () => {
 module.exports = {
   createUser,
   createProduct,
+  createRelationship,
   getUser,
   getProduct,
   getCollaborativeRecommendedList,
   getContentRecommendedList,
-  createRelationship,
 };
