@@ -7,7 +7,6 @@ const RedisStore = require('connect-redis')(session);
 const neo4j = require('../database/neo4j');
 const aws = require('aws-sdk');
 const queueUrl = require('../config/configQueueUrl.js');
-const PQueue = require('p-queue');
 
 aws.config.loadFromPath(`${__dirname}/../config/config.json`);
 
