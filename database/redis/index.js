@@ -3,25 +3,24 @@ const { promisify } = require('util');
 
 const client = redis.createClient();
 
-const lrangeAsync = promisify(client.lrange).bind(client);
-const getAsync = promisify(client.get).bind(client);
-const rpushAsync = promisify(client.rpush).bind(client);
+const hset = promisify(client.hset).bind(client);
+const hget = promisify(client.hget).bind(client);
 
 client.on('error', err => {
   console.log('Something went wrong ', err);
 });
 
-const addToContentList = recommendedList =>
-  rpushAsync('contentlist', JSON.stringify(recommendedList));
+const addToContentList = (recommendedList) =>
+  hset('contentlist', recommendedList[0], JSON.stringify(recommendedList[1]));
 
-const addToCollaborativeList = recommendedList =>
-  rpushAsync('collablist', JSON.stringify(recommendedList));
+const addToCollaborativeList = (recommendedList) =>
+  hset('collablist', recommendedList[0], JSON.stringify(recommendedList[1]));
 
 const getCollaborativeRecommendedList = user_id =>
-  lrangeAsync('collablist', user_id, user_id).then(res => res);
+  hget('collablist', user_id);
 
 const getContentRecommendedList = user_id =>
-  lrangeAsync('contentlist', user_id, user_id).then(res => res);
+  hget('contentlist', user_id);
 
 /*
 client.hgetall('hashkey', function(err, result) {

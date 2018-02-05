@@ -76,7 +76,7 @@ router.get('/api/getCollaborativeRecommendedList', async (req, res) => {
   var user_id = req.query.user_id || (req.body.user_id + '');
   try {
     let collabList = await redis.getCollaborativeRecommendedList(user_id);
-    if (collabList.length === 0) {
+    if (!collabList) {
       collabList = await neo4j.getCollaborativeRecommendedList(user_id);
       if (collabList.length === 0) {
         collabList = [
@@ -88,7 +88,7 @@ router.get('/api/getCollaborativeRecommendedList', async (req, res) => {
         ];
       }
     } else {
-      collabList = JSON.parse(collabList[0]);
+      collabList = JSON.parse(collabList);
     }
     return res.status(200).json(collabList);
   } catch (err) {
@@ -101,7 +101,7 @@ router.get('/api/getContentRecommendedList', async (req, res) => {
   var user_id = req.query.user_id || (req.body.user_id + '');
   try {
     let contentList = await redis.getContentRecommendedList(user_id);
-    if (contentList.length === 0) {
+    if (!contentList) {
       contentList = await neo4j.getContentRecommendedList(user_id);
       if (contentList.length === 0) {
         contentList = [
@@ -113,7 +113,7 @@ router.get('/api/getContentRecommendedList', async (req, res) => {
         ];
       }
     } else {
-      contentList = JSON.parse(contentList[0]);
+      contentList = JSON.parse(contentList);
     }
     return res.status(200).json(contentList);
   } catch (err) {
@@ -124,7 +124,7 @@ router.get('/api/getContentRecommendedList', async (req, res) => {
 router.get('/123', async (req, res) => {
   try {
     let contentList = await redis.getCollaborativeRecommendedList(2);
-    contentList = JSON.parse(contentList[0]);
+    contentList = JSON.parse(contentList);
     res.status(200).json(contentList);
   } catch (err) {
     console.error(err);
@@ -155,7 +155,7 @@ router.get('/api/redisUpdateCollaborativeRecommendedList', async (req, res) => {
       if (collabList.length === 0) {
         collabList = ["top recommended items TODO"]; // TODO
       }
-      promises.push(collabList);
+      promises.push([i, collabList]);
     }
 
     Promise.all(promises)
@@ -181,7 +181,7 @@ router.get('/api/redisUpdateContentRecommendedList', async (req, res) => {
       if (contentList.length === 0) {
         contentList = ["top recommended items TODO"]; // TODO
       }
-      promises.push(contentList);
+      promises.push([i, contentList]);
     }
 
     Promise.all(promises)
