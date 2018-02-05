@@ -20,6 +20,7 @@
     "aws-sdk": "^2.188.0",
     "body-parser": "^1.17.2",
     "cli-progress": "^1.7.0",
+    "compression": "^1.7.1",
     "connect-redis": "^3.3.3",
     "cookie-parser": "^1.4.3",
     "csv-writer": "0.0.3",
