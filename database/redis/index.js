@@ -22,6 +22,8 @@ const getCollaborativeRecommendedList = user_id =>
 const getContentRecommendedList = user_id =>
   hget('contentlist', user_id);
 
+const flushDatabase = () => client.flushdb();
+
 /*
 client.hgetall('hashkey', function(err, result) {
   console.log(JSON.stringify(result)); // {"key":"value","second key":"second value"}
@@ -34,4 +36,5 @@ module.exports = {
   addToCollaborativeList,
   getCollaborativeRecommendedList,
   getContentRecommendedList,
+  flushDatabase,
 };
