@@ -6,7 +6,8 @@
   "scripts": {
     "react-dev": "webpack -d --watch",
     "server-dev": "nodemon server/index.js",
-    "test": "mocha"
+    "test": "mocha",
+    "start": "node server/index.js"
   },
   "author": "Austin Shin",
   "license": "ISC",
@@ -21,6 +22,7 @@
   },
   "dependencies": {
     "aws-sdk": "^2.188.0",
+    "axios": "^0.18.0",
     "body-parser": "^1.17.2",
     "cli-progress": "^1.7.0",
     "compression": "^1.7.1",
@@ -33,6 +35,8 @@
     "neo4j": "^2.0.0-RC2",
     "neo4j-driver": "^1.5.3",
     "newrelic": "^2.7.0",
+    "node-cron": "^1.2.1",
+    "nodemon": "^1.14.12",
     "passport": "^0.4.0",
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
