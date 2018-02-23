@@ -2,7 +2,7 @@ const neo4j = require('neo4j-driver').v1;
 const util = require('./helpers.js');
 
 const driver = neo4j.driver(
-  'bolt://localhost',
+  'bolt://neo4j:7687',
   neo4j.auth.basic('neo4j', '123'),
 );
 const session = driver.session();
@@ -113,7 +113,7 @@ const getContentRecommendedList = user_id =>
 const createRelationship = (user_id, product_id, event) =>
   session
     .run(
-      `MATCH (user:USER {user_id: {user_id}}), (product:PRODUCT {product_id: {product_id}}) CREATE (user)-[r:RELATION {type: {event}}]->(product) RETURN r`,
+      `MATCH (user:USER {user_id: {user_id}}), (product:PRODUCT {product_id: {product_id}}) MERGE (user)-[r:RELATION {type: {event}}]->(product) RETURN r`,
       {
         user_id,
         product_id,
