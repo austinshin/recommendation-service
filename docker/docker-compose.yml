@@ -1,0 +1,27 @@
+version: '2'
+services:
+  redis:
+    image: 'redis:alpine'
+    mem_limit: 242880000
+  neo4j:
+    image: 'neo4j:latest'
+    ports:
+      - '7474:7474'
+      - '7687:7687'
+    volumes:
+      - /Users/Link/neo4j/import:/var/lib/neo4j/import
+    mem_limit: 2242880000
+  app:
+    image: '525771590810.dkr.ecr.us-west-1.amazonaws.com/recservice'
+    mem_limit: 742880000
+    depends_on:
+      - redis
+      - neo4j
+    ports:
+      - '3000:3000'
+    environment:
+      REDIS_HOST: redis
+      command: sh -c './wait-for redis -- npm start'
+
+
+
