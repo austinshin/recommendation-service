@@ -1,7 +1,7 @@
 const redis = require('redis');
 const { promisify } = require('util');
 
-const client = redis.createClient();
+const client = redis.createClient(6379, 'localhost' || 'redis');
 
 const hset = promisify(client.hset).bind(client);
 const hget = promisify(client.hget).bind(client);
@@ -10,17 +10,19 @@ client.on('error', err => {
   console.log('Something went wrong ', err);
 });
 
-const addToContentList = (recommendedList) =>
+const addToContentList = recommendedList =>
   hset('contentlist', recommendedList[0], JSON.stringify(recommendedList[1]));
 
-const addToCollaborativeList = (recommendedList) =>
+const doSomething = () => hset('test', 'hello', '123');
+
+const getSomething = () => hget('test', 'hello');
+
+const addToCollaborativeList = recommendedList =>
   hset('collablist', recommendedList[0], JSON.stringify(recommendedList[1]));
 
-const getCollaborativeRecommendedList = user_id =>
-  hget('collablist', user_id);
+const getCollaborativeRecommendedList = user_id => hget('collablist', user_id);
 
-const getContentRecommendedList = user_id =>
-  hget('contentlist', user_id);
+const getContentRecommendedList = user_id => hget('contentlist', user_id);
 
 const flushDatabase = () => client.flushdb();
 
@@ -37,4 +39,6 @@ module.exports = {
   getCollaborativeRecommendedList,
   getContentRecommendedList,
   flushDatabase,
+  doSomething,
+  getSomething,
 };
